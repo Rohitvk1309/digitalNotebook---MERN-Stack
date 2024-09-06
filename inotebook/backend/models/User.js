@@ -3,25 +3,25 @@ const { Schema } = mongoose;
 
 
 const UserSchema = new Schema({
-    name : {
+    name: {
         type: String,
-        required:true
+        required: true
     },
-    email : {
+    email: {
         type: String,
-        required:true,
-        unique : true
+        required: true,
+        unique: true
     },
-    password : {
+    password: {
         type: String,
-        required:true
+        required: true
     },
-    date : {
+    date: {
         type: Date,
         // required: Date.now
     },
-  });
-  
-  const User = mongoose.model('user',UserSchema);
-//   User.createIndexes()
-  module.exports = mongoose.model('user',UserSchema);
+});
+
+const User = mongoose.model('user', UserSchema);
+User.createIndexes()
+module.exports = mongoose.model('user', UserSchema);
