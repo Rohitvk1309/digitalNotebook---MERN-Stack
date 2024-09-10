@@ -51,51 +51,48 @@ router.post('/createuser', [
     }
 })
 
-//Route 2  Authenticate/create login  a User using : Post "/api/auth/login" . No login required
 
 router.post('/login', [
-    body('email', 'Enter a valid Email').isEmail(),
-    body('password', 'Password can not be blank').exists(),
-
-], async (req, res) => {
-
-    // if there are error return bad request and the errors
+    body('email', 'Enter a valid email').isEmail(),
+    body('password', 'Password cannot be blank').exists(),
+  ], async (req, res) => {
+    let success = false;
+    // If there are errors, return Bad request and the errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ errors: errors.array() });
     }
-
-    const {email, password} = req.body;
+  
+    const { email, password } = req.body;
     try {
-        console.log('Before finding user');  // Debugging
-        let user = await User.findOne({ email: new RegExp(`^${email}$`, 'i') });
-        console.log('User found:', user);   // Debugging
-        if(!user) {
-            console.log(`User not found with email: ${email}`); // Debugging
-            return res.status(400).json({ error: "please try to login with correct credentials 12" })
+      let user = await User.findOne({ email });
+      if (!user) {
+        success = false
+        return res.status(400).json({ error: "Please try to login with correct credentials 1" });
+      }
+  
+      const passwordCompare = await bcrypt.compare(password, user.password);
+      if (!passwordCompare) {
+        success = false
+        return res.status(400).json({ success, error: "Please try to login with correct credentials 2" });
+      }
+  
+      const data = {
+        user: {
+          id: user.id
         }
-        console.log('Before comparing passwords');   // Debugging
-        const passwordCompare = await bcrypt.compare(password, user.password)
-        console.log('Password comparison result:', passwordCompare);  // Debugging
-        if (!passwordCompare) {
-            console.log(`Password mismatch for email: ${email}`); //Debugging
-            return res.status(400).json({ error: "please try to login with correct credentials 34" })
-        }
-        const data = {
-            user: {
-                id: user.id
-            }
-        }
-        const authtoken = jwt.sign(data, JWT_SECRET)
-        res.json({ authtoken })
-        console.log('Token generated:', authtoken);   // Debugging
+      }
+      const authtoken = jwt.sign(data, JWT_SECRET);
+      success = true;
+      res.json({ success, authtoken })
+  
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send("Internal Server Error");
     }
-    catch (error) {
-        console.error(error.message)
-        res.status(500).send("Internal server Error ")
-    }
-
-})
+  
+  
+  });
 
 
 // Route 3  Get Loggedin details  using : Post "/api/auth/getuser" . login required
@@ -112,9 +109,15 @@ try {
 }
 })
 
-
-
 module.exports = router
+
+
+
+
+
+
+
+
 
 
 
